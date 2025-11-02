@@ -63,6 +63,7 @@
     font-weight: bold;
     cursor: pointer;
     border-radius: 8px;
+    margin: 2px;
   }
 
   button:hover {
@@ -76,11 +77,19 @@
     border: 1px solid #888;
     margin-bottom: 15px;
   }
+
+  .edit-btn {
+    background-color: #ffa500;
+  }
+
+  .edit-btn:hover {
+    background-color: #e69500;
+  }
 </style>
 </head>
 <body>
 
-<h1>Daftar Pendiri Himpunan Dayak Sawe</h1>
+<h1>DAFTAR NAMA PENDIRI HIMPUNAN DAYAK SAWE</h1>
 
 <form id="pendiriForm">
   <input type="text" id="nama" placeholder="Nama Pendiri" required>
@@ -95,10 +104,10 @@
 <table id="tabelPendiri">
   <thead>
     <tr>
-      <th>No</th>
-      <th>Nama</th>
-      <th>Asal</th>
-      <th>Asal Kampus</th>
+      <th>NO</th>
+      <th>NAMA</th>
+      <th>ASAL</th>
+      <th>ASAL KAMPUS</th>
       <th>Aksi</th>
     </tr>
   </thead>
@@ -106,69 +115,88 @@
 </table>
 
 <script>
-  let dataPendiri = JSON.parse(localStorage.getItem('dataPendiri')) || [];
+let dataPendiri = JSON.parse(localStorage.getItem('dataPendiri')) || [];
+const form = document.getElementById('pendiriForm');
+const tabel = document.querySelector('#tabelPendiri tbody');
+const cariInput = document.getElementById('cari');
+let editIndex = -1; // menandai index yang sedang diedit
 
-  const form = document.getElementById('pendiriForm');
-  const tabel = document.querySelector('#tabelPendiri tbody');
-  const cariInput = document.getElementById('cari');
+// Fungsi render tabel
+function renderTabel(filter = "") {
+  tabel.innerHTML = '';
 
-  // Fungsi render tabel
-  function renderTabel(filter = "") {
-    tabel.innerHTML = '';
+  let hasilFilter = dataPendiri.filter(item =>
+    item.nama.toLowerCase().includes(filter) ||
+    item.asal.toLowerCase().includes(filter) ||
+    item.kampus.toLowerCase().includes(filter)
+  );
 
-    let hasilFilter = dataPendiri.filter(item =>
-      item.nama.toLowerCase().includes(filter) ||
-      item.asal.toLowerCase().includes(filter) ||
-      item.kampus.toLowerCase().includes(filter)
-    );
+  hasilFilter.forEach((item, index) => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${index + 1}</td>
+      <td>${item.nama}</td>
+      <td>${item.asal}</td>
+      <td>${item.kampus}</td>
+      <td>
+        <button class="edit-btn" onclick="editData(${index})">🖉</button>
+        <button onclick="hapusData(${index})">Hapus</button>
+      </td>
+    `;
+    tabel.appendChild(row);
+  });
+}
 
-    hasilFilter.forEach((item, index) => {
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${index + 1}</td>
-        <td>${item.nama}</td>
-        <td>${item.asal}</td>
-        <td>${item.kampus}</td>
-        <td><button onclick="hapusData(${index})">Hapus</button></td>
-      `;
-      tabel.appendChild(row);
-    });
+// Tambah data baru atau simpan edit
+form.addEventListener('submit', function(e) {
+  e.preventDefault();
+  const nama = document.getElementById('nama').value;
+  const asal = document.getElementById('asal').value;
+  const kampus = document.getElementById('kampus').value;
+
+  if(editIndex === -1){
+    // Tambah data baru
+    dataPendiri.push({nama, asal, kampus});
+  } else {
+    // Simpan hasil edit
+    dataPendiri[editIndex] = {nama, asal, kampus};
+    editIndex = -1;
+    form.querySelector('button').textContent = 'Tambah Data';
   }
 
-  // Tambah data baru
-  form.addEventListener('submit', function(e) {
-    e.preventDefault();
-    const nama = document.getElementById('nama').value;
-    const asal = document.getElementById('asal').value;
-    const kampus = document.getElementById('kampus').value;
-
-    dataPendiri.push({ nama, asal, kampus });
-    localStorage.setItem('dataPendiri', JSON.stringify(dataPendiri));
-
-    form.reset();
-    renderTabel();
-  });
-
-  // Hapus data
-  function hapusData(index) {
-    if (confirm('Yakin ingin menghapus data ini?')) {
-      dataPendiri.splice(index, 1);
-      localStorage.setItem('dataPendiri', JSON.stringify(dataPendiri));
-      renderTabel();
-    }
-  }
-
-  // Fitur pencarian langsung
-  cariInput.addEventListener('input', function() {
-    const keyword = this.value.toLowerCase();
-    renderTabel(keyword);
-  });
-
-  // Render tabel saat halaman dibuka
+  localStorage.setItem('dataPendiri', JSON.stringify(dataPendiri));
+  form.reset();
   renderTabel();
+});
+
+// Hapus data
+function hapusData(index) {
+  if(confirm('Yakin ingin menghapus data ini?')){
+    dataPendiri.splice(index, 1);
+    localStorage.setItem('dataPendiri', JSON.stringify(dataPendiri));
+    renderTabel();
+  }
+}
+
+// Edit data
+function editData(index){
+  const item = dataPendiri[index];
+  document.getElementById('nama').value = item.nama;
+  document.getElementById('asal').value = item.asal;
+  document.getElementById('kampus').value = item.kampus;
+  editIndex = index;
+  form.querySelector('button').textContent = 'Simpan Edit';
+}
+
+// Fitur pencarian langsung
+cariInput.addEventListener('input', function(){
+  const keyword = this.value.toLowerCase();
+  renderTabel(keyword);
+});
+
+// Render tabel saat halaman dibuka
+renderTabel();
 </script>
 
 </body>
 </html>
-# index.html
-
